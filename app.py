@@ -107,7 +107,7 @@ def register():
     content = Content("text/html", body)
 
     mail = Mail(from_email, subject, to_email, content)
-    # response = sg.client.mail.send.post(request_body=mail.get())
+    response = sg.client.mail.send.post(request_body=mail.get())
 
     return jsonify(status="Éxito, ahora valida tu cuenta!"), 200
 
