@@ -38,6 +38,7 @@ class User(db.Model):
     glucose_controls = db.relationship('GlucoseControl', backref=db.backref('user', lazy='joined'), lazy='select')
     glucose_unit = db.Column(db.Integer, nullable=False)
     confirm_account_token = db.Column(db.String(36), unique=True, default=str(uuid.uuid4()))
+    avatar = db.Column(db.LargeBinary)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
@@ -69,6 +70,9 @@ def register():
     first_name = request.json.get('first_name', None)
     last_name = request.json.get('last_name', None)
     email = request.json.get('email', None)
+    role = request.json.get('role', None)
+    glucose_unit = request.json.get('glucose_unit', None)
+    avatar = request.json.get('avatar', None).encode('utf-8')
     if not username:
         return jsonify({"msg": "Missing username parameter"}), 400
     if not password:
@@ -79,10 +83,18 @@ def register():
         return jsonify({"msg": "Missing last_name parameter"}), 400
     if not email:
         return jsonify({"msg": "Missing email parameter"}), 400
+    if not role:
+        return jsonify({"msg": "Missing role parameter"}), 400
+    if not glucose_unit:
+        return jsonify({"msg": "Missing glucose_unit parameter"}), 400
+    if not avatar:
+        return jsonify({"msg": "Missing glucose_unit parameter"}), 400
     if User.query.filter((User.email == email) | (User.username == username)).first():
         return jsonify({"msg": "Username or email already in use!"}), 400
     cypher_password = md5(password.encode("utf-8")).hexdigest()
-    user = User(username=username, email=email, cypher_password=cypher_password, first_name=first_name, last_name=last_name, role='dm1', glucose_unit='mg/dl')
+    confirm_account_token = str(uuid.uuid4())
+    user = User(username=username, email=email, cypher_password=cypher_password, first_name=first_name, last_name=last_name, role=role, glucose_unit=glucose_unit, confirm_account_token=confirm_account_token, avatar=avatar)
+    print(confirm_account_token)
     db.session.add(user)
     db.session.commit()
 
@@ -95,7 +107,7 @@ def register():
     content = Content("text/html", body)
 
     mail = Mail(from_email, subject, to_email, content)
-    response = sg.client.mail.send.post(request_body=mail.get())
+    # response = sg.client.mail.send.post(request_body=mail.get())
 
     return jsonify(status="Éxito, ahora valida tu cuenta!"), 200
 
@@ -187,4 +199,4 @@ def glucose_control_list(patient):
     return jsonify({"error": "No a doctor user"}), 403
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')
