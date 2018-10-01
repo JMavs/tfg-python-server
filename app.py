@@ -14,6 +14,8 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
+from raven.contrib.flask import Sentry
+
 import pdb
 
 
@@ -24,6 +26,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("SQLALCHEMY_DATABASE_URI"
 
 jwt = JWTManager(app)
 db = SQLAlchemy(app)
+sentry = Sentry(app, dsn=os.environ.get("DSN_SENTRY"))
 migrate = Migrate(app, db)
 sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY', default=None))
 
