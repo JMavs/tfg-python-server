@@ -19,11 +19,9 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 
 sentry_sdk.init(
     dsn=os.environ.get("DSN_SENTRY"),
-    integrations=[FlaskIntegration()]
+    integrations=[FlaskIntegration()],
+    environment=os.environ.get("MELLITTUS_ENV")
 )
-
-import pdb
-
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", default=None)
@@ -43,12 +41,13 @@ class User(db.Model):
     last_name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     role = db.Column(db.String(30), nullable=False)
+    insulins = db.Column(db.PickleType())
     glucose_controls = db.relationship('GlucoseControl', backref=db.backref('user', lazy='joined'), lazy='select')
-    glucose_unit = db.Column(db.Integer, nullable=False)
-    confirm_account_token = db.Column(db.String(36), unique=True, default=str(uuid.uuid4()))
+    glucose_unit = db.Column(db.String(6), nullable=False)
+    confirm_account_token = db.Column(db.String(36), unique=True)
     avatar = db.Column(db.LargeBinary)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False)
+    updated_at = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -101,7 +100,20 @@ def register():
         return jsonify({"msg": "Username or email already in use!"}), 400
     cypher_password = md5(password.encode("utf-8")).hexdigest()
     confirm_account_token = str(uuid.uuid4())
-    user = User(username=username, email=email, cypher_password=cypher_password, first_name=first_name, last_name=last_name, role=role, glucose_unit=glucose_unit, confirm_account_token=confirm_account_token, avatar=avatar)
+    date = datetime.utcnow
+    user = User(
+            username=username,
+            email=email,
+            cypher_password=cypher_password,
+            first_name=first_name,
+            last_name=last_name,
+            role=role,
+            glucose_unit=glucose_unit,
+            confirm_account_token=confirm_account_token,
+            avatar=avatar,
+            created_at=date,
+            updated_at=date
+        )
     print(confirm_account_token)
     db.session.add(user)
     db.session.commit()
