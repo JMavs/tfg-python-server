@@ -50,7 +50,11 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
-        return '<User %r>' % self.username
+        if self.role in ['dm1', 'dm2']:
+            return '<Diabetic %r>' % self.username
+        else if self.role in ['doctor']:
+            return '<Doctor %r>' % self.username
+        return '<Familiar %r>' % self.username
 
 class GlucoseControl(db.Model):
     id = db.Column(db.Integer, primary_key=True)
